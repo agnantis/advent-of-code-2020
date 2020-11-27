@@ -1,0 +1,27 @@
+name:                advent-of-code
+version:             0.1.0.0
+homepage:            https://github.com/agnantis/advent-of-code-2020
+license:             BSD3
+license-file:        LICENSE
+author:              Kostas Agnantis
+maintainer:          kagnadis@gmail.com
+copyright:           2020 Kostas Agnantis
+category:            Logic
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  build-depends:      base >= 4.7 && < 5
+                    , containers
+                    , megaparsec
+                    , text
+  hs-source-dirs:     src
+  other-modules:      AoC.Utils
+                    , AoC.Day1
+  ghc-options:        -Wall -Wno-simplifiable-class-constraints
+  default-language:   Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/agnantis/advent-of-code-2020
