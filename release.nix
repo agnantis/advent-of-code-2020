@@ -5,10 +5,10 @@ let
       haskellPackages = pkgs.haskell.packages // {
         "${compiler}" = pkgs.haskell.packages."${compiler}".override {
           overrides = haskellPackagesNew: haskellPackagesOld: rec {
-            hs-reasoner =
+            aoc20 =
               let
-                devDeps = with haskellPackagesOld; if pkgs.lib.inNixShell then [ hlint ghcid doctest pkgs.gitg haskell-language-server ] else [ ];
-                devSystemDeps = if pkgs.lib.inNixShell then [ pkgs.entr ] else [ ];
+                devDeps = with haskellPackagesOld; if pkgs.lib.inNixShell then [ hlint ghcid doctest haskell-language-server ] else [ ];
+                devSystemDeps = with pkgs; if lib.inNixShell then [ entr gitg ] else [ ];
               in
                 haskellPackagesNew.callPackage ./default.nix { inherit devDeps; inherit devSystemDeps; };
           };
@@ -19,5 +19,5 @@ let
   pkgs = import (import ./nix/pinned-nixpkgs.nix) { inherit config; };
 in
 {
-  hs-reasoner = pkgs.haskellPackages.${compiler}.hs-reasoner;
+  aoc20 = pkgs.haskellPackages.${compiler}.aoc20;
 }

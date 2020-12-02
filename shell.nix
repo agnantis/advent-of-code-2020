@@ -1,1 +1,1 @@
-(import ./release.nix { }).hs-reasoner.env
+(import ./release.nix { }).aoc20.env

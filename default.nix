@@ -3,7 +3,7 @@
 , devSystemDeps ? [ ]
 }:
 mkDerivation {
-  pname = "advent-of-code-2019";
+  pname = "advent-of-code-2020";
   version = "0.1.0.0";
   src= ./.;
   isLibrary = true;
@@ -13,6 +13,6 @@ mkDerivation {
     base containers megaparsec text
   ] ++ devDeps;
   executableHaskellDepends = [ base ];
-  homepage = "https://github.com/agnantis/advent-of-code-2019";
+  homepage = "https://github.com/agnantis/advent-of-code-2020";
   license = stdenv.lib.licenses.bsd3;
 }
