@@ -55,7 +55,22 @@ In this example, traversing the map using this slope would cause you to encounte
 
 Starting at the top-left corner of your map and following a slope of right 3 and down 1, how many trees would you encounter?
 
- -}
+--- Part Two ---
+
+Time to check the rest of the slopes - you need to minimize the probability of a sudden arboreal stop, after all.
+
+Determine the number of trees you would encounter if, for each of the following slopes, you start at the top-left corner and traverse the map all the way to the bottom:
+
+    Right 1, down 1.
+    Right 3, down 1. (This is the slope you already checked.)
+    Right 5, down 1.
+    Right 7, down 1.
+    Right 1, down 2.
+
+In the above example, these slopes would find 2, 7, 3, 4, and 2 tree(s) respectively; multiplied together, these produce the answer 336.
+
+What do you get if you multiply together the number of trees encountered on each of the listed slopes?
+-}
 module AoC.Day3 where
 
 import Control.Arrow ((&&&))
@@ -70,19 +85,38 @@ type IntPair = (Int, Int)
 startingPoint :: IntPair
 startingPoint = (0, 0)
 
+initialSlope :: IntPair
+initialSlope = (1, 3)
+
+tree :: Char
+tree = '#'
+
+slopes :: [IntPair]
+slopes = [(1, 1), (1, 3), (1, 5), (1, 7), (2, 1)]
+
+-- We can cheat here as the down is always to the next line, so we can zip
+-- them all
 fstStar :: Int -> Input -> Output
 fstStar patternWidth input =
-  let zipper l (_, idx) = l !! (idx `mod` patternWidth)
-   in length . filter (== '#') $ zipWith zipper input tobboganPath
+  let zipper l (_, idx) = l !! idx
+   in length . filter (== tree) $ zipWith zipper input $ tobboganPath patternWidth initialSlope
 
-sndStar :: Input -> Output
-sndStar = undefined
+-- General implemetation to support down != 1
+fstStar' :: Int -> IntPair -> Input -> Output
+fstStar' patternWidth slope input =
+  let paths = takeWhile (\(x, _) -> x < maxDepth) $ tobboganPath patternWidth slope
+      maxDepth = length input
+   in length . filter (== tree) $ fmap (\(x, y) -> (input !! x) !! y) paths
 
-tobboganPath :: [IntPair]
-tobboganPath = iterate (bimap (+ 1) (+ 3)) startingPoint
+sndStar :: Int -> Input -> Output
+sndStar patternWidth input = product . fmap (\s -> fstStar' patternWidth s input) $ slopes
+
+tobboganPath :: Int -> IntPair -> [IntPair]
+tobboganPath width (x, y) = iterate (bimap (+ x) (\a -> (a + y) `mod` width)) startingPoint
 
 main :: IO ()
 main = do
   input <- lines <$> readFile "src/input/day3"
   let patternWidth = head $ fmap length input
-  print . (fstStar patternWidth &&& sndStar) $ input
+  -- print . (fstStar' patternWidth initialSlope &&& sndStar patternWidth) $ input
+  print . (fstStar patternWidth &&& sndStar patternWidth) $ input
