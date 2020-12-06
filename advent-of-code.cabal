@@ -22,6 +22,7 @@ library
                     , AoC.Day2
                     , AoC.Day3
                     , AoC.Day4
+                    , AoC.Day5
   ghc-options:        -Wall -Wno-simplifiable-class-constraints
   default-language:   Haskell2010
 
