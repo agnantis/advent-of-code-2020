@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+
 {-
    --- Day 5: Binary Boarding ---
 
@@ -42,15 +43,27 @@ Here are some other boarding passes:
 
 As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
 
+--- Part Two ---
+
+Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+
+It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+
+What is the ID of your seat?
 -}
 module AoC.Day5 where
 
 import Control.Arrow ((&&&))
+import Data.List (sort)
 
 data ColPos = F | B deriving (Show, Read, Enum)
+
 data RowPos = L | R deriving (Show, Read, Enum)
 
 data Entry = Entry Int Int deriving (Show, Read)
+
 type Input = [Entry]
 
 type Output = Int
@@ -60,22 +73,26 @@ file = "src/input/day5"
 
 fstStar :: Input -> Output
 fstStar = maximum . fmap encode
- where encode (Entry x y) = x * 8 + y
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar entries = fst . head $ filter (uncurry (/=)) $ zip [(head existing) ..] existing
+  where
+    existing = sort . fmap encode $ entries
+
+encode :: Entry -> Int
+encode (Entry x y) = x * 8 + y
 
 parseEntry :: String -> Entry
-parseEntry str = 
+parseEntry str =
   let (rowS, colS) = splitAt 7 str
-      row = toBinary $ fmap (read @ColPos. pure) rowS
+      row = toBinary $ fmap (read @ColPos . pure) rowS
       col = toBinary $ fmap (read @RowPos . pure) colS
-  in Entry row col
+   in Entry row col
 
 toBinary :: Enum a => [a] -> Int
 toBinary xs =
   let binData = reverse $ fmap fromEnum xs :: [Int]
-   in sum $ zipWith (\a e -> a * 2^e) binData [0::Int ..]
+   in sum $ zipWith (\a e -> a * 2 ^ e) binData [0 :: Int ..]
 
 main :: IO ()
 main = do
