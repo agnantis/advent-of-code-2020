@@ -84,7 +84,8 @@ module AoC.Day6 where
 
 import AoC.Utils (splitOn)
 import Control.Arrow ((&&&))
-import Data.List (foldl1', nub)
+import Data.List (foldl1')
+import Data.Containers.ListUtils (nubOrd)
 import Data.Set as S
 
 type Input = [String]
@@ -95,7 +96,7 @@ file :: String
 file = "src/input/day6"
 
 fstStar :: Input -> Output
-fstStar = sum . fmap (length . nub . foldl1' (<>)) . splitOn ""
+fstStar = sum . fmap (length . nubOrd . foldl1' (<>)) . splitOn ""
 
 sndStar :: Input -> Output
 sndStar = sum . fmap (S.size . foldl1' (S.intersection) . (fmap S.fromList)) . splitOn ""
