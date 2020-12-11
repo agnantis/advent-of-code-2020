@@ -13,7 +13,7 @@ mkdir -p $inputDir
 
 
 if (( currentYear >= year )) && (( currentMonth == 12 )); then
-  for i in {1..25}; do
+  for i in {1..7}; do
     if (( currentDay >= i )); then
       filename=$inputDir/day${i}
       if [[ ! -s $filename ]]; then
