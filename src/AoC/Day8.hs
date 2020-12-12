@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 {-
    --- Day 8: Handheld Halting ---
 
@@ -45,13 +47,52 @@ Immediately before the program would run an instruction a second time, the value
 
 Run your copy of the boot code. Immediately before any instruction is executed a second time, what value is in the accumulator?
 
+--- Part Two ---
+
+After some careful analysis, you believe that exactly one instruction is corrupted.
+
+Somewhere in the program, either a jmp is supposed to be a nop, or a nop is supposed to be a jmp. (No acc instructions were harmed in the corruption of this boot code.)
+
+The program is supposed to terminate by attempting to execute an instruction immediately after the last instruction in the file. By changing exactly one jmp or nop, you can repair the boot code and make it terminate correctly.
+
+For example, consider the same program from above:
+
+nop +0
+acc +1
+jmp +4
+acc +3
+jmp -3
+acc -99
+acc +1
+jmp -4
+acc +6
+
+If you change the first instruction from nop +0 to jmp +0, it would create a single-instruction infinite loop, never leaving that instruction. If you change almost any of the jmp instructions, the program will still eventually find another jmp instruction and loop forever.
+
+However, if you change the second-to-last instruction (from jmp -4 to nop -4), the program terminates! The instructions are visited in this order:
+
+nop +0  | 1
+acc +1  | 2
+jmp +4  | 3
+acc +3  |
+jmp -3  |
+acc -99 |
+acc +1  | 4
+nop -4  | 5
+acc +6  | 6
+
+After the last instruction (acc +6), the program terminates by attempting to run the instruction below the last instruction in the file. With this change, after the program terminates, the accumulator contains the value 8 (acc +1, acc +1, acc +6).
+
+Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to jmp). What is the value of the accumulator after the program terminates?
+
  -}
 module AoC.Day8 where
 
 import Control.Arrow ((&&&))
+import Data.Either (fromLeft, fromRight, isRight)
 import Data.Functor (($>))
 import qualified Data.Set as S
-import Data.Vector ((!), fromList, Vector)
+import Data.Vector (Vector, fromList, (!))
 import Data.Void (Void)
 import Text.Megaparsec (Parsec, eof, many, runParser, some, try, (<|>))
 import Text.Megaparsec.Char (char, digitChar, space, string)
@@ -67,8 +108,14 @@ type Index = Int
 
 type Value = Int
 
--- current pos, accumulated value, visited positions
-type State = (Index, Value, S.Set Index)
+-- current pos, accumulated value, visited positions, flipped
+data State = State
+  { pc :: Index, -- program counter
+    value :: Value, -- accumulated value
+    visited :: S.Set Index, -- visited pc's
+    flipped :: Bool -- fixed once
+  }
+  deriving (Show)
 
 type Parser = Parsec Void String
 
@@ -108,29 +155,54 @@ commandsP = sepWith "\n" commandP <* char '\n' <* eof --we need the '\n' as it i
 -- Algorithm --
 ---------------
 
+initState :: State
+initState = State (-1) 0 S.empty True -- do not branch
+
+initState' :: State
+initState' = initState {flipped = False} -- branch
+
+initCommand :: Command
+initCommand = Command NOP 0
+
 fstStar :: Input -> Output
 fstStar input =
   let vec = fromList input
-      initState = (-1, 0, S.empty)
-      initCommand = Command NOP 0
-      Left out = runProgram vec initState initCommand
-   in out
+      out = runProgram vec initState initCommand
+   in fromLeft (-1) (head out)
 
-runProgram :: Vector Command -> State -> Command -> Either Value State
-runProgram vec s@(idx, _, _) cmd =
-  let (idx', acc', set') = exec cmd s
-      set'' = idx `S.insert` set'
-   in if idx' `S.member` set'
-        then Left acc'
-        else runProgram vec (idx', acc', set'') (vec ! idx')
+runProgram :: Vector Command -> State -> Command -> [Either Value Value]
+runProgram vec s cmd =
+  let s'@State {..} = exec cmd s
+      set' = pc `S.insert` visited
+   in if pc `S.member` visited
+        then [Left value]
+        else
+          if pc >= length vec
+            then [Right value]
+            else runAlternative vec (s' {visited = set'}) (vec ! pc)
+
+runAlternative :: Vector Command -> State -> Command -> [Either Value Value]
+runAlternative vec s cmd@(Command ACC _) = runProgram vec s cmd
+runAlternative vec s cmd@(Command NOP 0) = runProgram vec s cmd
+runAlternative vec s@State {..} cmd@(Command NOP x) =
+  if flipped
+    then runProgram vec s cmd
+    else runProgram vec s cmd <> runProgram vec s {flipped = True} (Command JMP x)
+runAlternative vec s@State {..} cmd@(Command JMP x) =
+  if flipped
+    then runProgram vec s cmd
+    else runProgram vec s cmd <> runProgram vec s {flipped = True} (Command NOP x)
 
 exec :: Command -> State -> State
-exec (Command NOP _) (idx, acc, set) = (idx + 1, acc, set)
-exec (Command ACC x) (idx, acc, set) = (idx + 1, acc + x, set)
-exec (Command JMP x) (idx, acc, set) = (idx + x, acc, set)
+exec (Command NOP _) s@State {..} = s {pc = pc + 1}
+exec (Command ACC x) s@State {..} = s {pc = pc + 1, value = value + x}
+exec (Command JMP x) s@State {..} = s {pc = pc + x}
 
 sndStar :: Input -> Output
-sndStar = undefined
+sndStar input =
+  let vec = fromList input
+      out = head . filter isRight . runAlternative vec initState' $ initCommand
+   in fromRight (-1) out
 
 main :: IO ()
 main = do
