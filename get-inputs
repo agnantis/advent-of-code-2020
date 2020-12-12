@@ -1,7 +1,8 @@
 #!/run/current-system/sw/bin/env bash
 
 . ./session
-year=$1
+maxDay=$1
+year=$2
 currentYear=$(date +%Y)
 currentMonth=$(date +%-m)
 currentDay=$(date +%-d)
@@ -9,12 +10,14 @@ inputDir=src/input
 if [[ -z $year ]]; then
   year=$currentYear
 fi
+if [[ -z $maxDay ]]; then
+  maxDay=$currentDay
+fi
 mkdir -p $inputDir
 
-
 if (( currentYear >= year )) && (( currentMonth == 12 )); then
-  for i in {1..7}; do
-    if (( currentDay >= i )); then
+  for i in {1..25}; do
+    if (( currentDay >= i && i <= maxDay )); then
       filename=$inputDir/day${i}
       if [[ ! -s $filename ]]; then
         echo "Downloading $filename ..."

@@ -1,4 +1,4 @@
-{ mkDerivation, stdenv, base, containers, megaparsec, text
+{ mkDerivation, stdenv, base, containers, megaparsec, text, vector
 , devDeps ? [ ]
 , devSystemDeps ? [ ]
 }:

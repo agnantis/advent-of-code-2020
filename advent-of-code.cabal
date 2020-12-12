@@ -16,6 +16,7 @@ library
                     , containers
                     , megaparsec
                     , text
+                    , vector
   hs-source-dirs:     src
   other-modules:      AoC.Utils
                     , AoC.Day1
@@ -25,6 +26,7 @@ library
                     , AoC.Day5
                     , AoC.Day6
                     , AoC.Day7
+                    , AoC.Day8
   ghc-options:        -Wall -Wno-simplifiable-class-constraints
   default-language:   Haskell2010
 
